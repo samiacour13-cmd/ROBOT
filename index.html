@@ -1041,7 +1041,7 @@ input.className = 'fill-input';
 input.type = 'text';
 
 if (typeof q.answer === "number") {
-    input.inputMode = "decimal";
+    input.inputMode = "text";
     input.placeholder = "أدخل الناتج هنا";
 } else {
     input.inputMode = "text";
@@ -1057,8 +1057,12 @@ function submit() {
     const raw = input.value.trim();
 if (typeof q.answer === "number") {
     
-    const val = parseFloat(raw.replace(',', '.'));
-    const tol = q.tol != null ? q.tol : 0.01;
+const cleaned = raw
+  .replace(',', '.')
+  .replace('−', '-')   // تحويل السالب الخاص ببعض الهواتف
+  .replace(/\s/g, ''); // حذف الفراغات
+
+const val = parseFloat(cleaned);    const tol = q.tol != null ? q.tol : 0.01;
 
     if (!isNaN(val) && Math.abs(val - q.answer) <= tol) {
         input.style.borderColor = 'var(--green)';
