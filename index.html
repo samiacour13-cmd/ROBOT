@@ -804,7 +804,7 @@ const STAGES=[
       {type:'mcq', prompt:'أيّ الكسور التالية أكبر؟', options:['\\(\\frac{3}{4}\\)','\\(\\frac{5}{8}\\)','\\(\\frac{1}{4}\\)','\\(\\frac{1}{2}\\)'], correct:0},
       {type:'tf', prompt:'لجمع كسرين لهما نفس المقام، نجمع البسطين ونحتفظ بنفس المقام.', answer:true},
       {type:'fill', prompt:'ما هي الخاصية التي تسمح لنا بكتابة العبارة k(a+b) على الشكل ka+kb:', answer:'التوزيع'},
-      {type:'mcq', prompt:'  احسب بسرعة:<span dir="ltr"> A=45-5×2-7</span>', options:['28','54','48','64'], correct:0, timed:20},
+      {type:'mcq', prompt:'  احسب بسرعة:<span dir="ltr"> A=45-5×2-7</span>', options:['28','54','48','64'], correct:0, timed:25},
       {type:'seq', prompt:'رتّب الكسور التالية ترتيبًا تصاعديًا (من الأصغر إلى الأكبر):', items:['\\(\\frac{1}{2}\\)','\\(\\frac{1}{4}\\)','\\(\\frac{3}{4}\\)','\\(\\frac{1}{8}\\)'], correctOrder:['\\(\\frac{1}{8}\\)','\\(\\frac{1}{4}\\)','\\(\\frac{1}{2}\\)','\\(\\frac{3}{4}\\)']},
       {type:'match', prompt:'صل كل كسر بكتابته العشرية المكافئة:', pairs:[['\\(\\frac{1}{2}\\)','0.5'],['\\(\\frac{1}{4}\\)','0.25'],['\\(\\frac{3}{4}\\)','0.75'],['\\(\\frac{1}{5}\\)','0.2']]}
     ]
@@ -816,28 +816,28 @@ const STAGES=[
     intro:'الذراعين بحاجة ألى حل تحديات الزوايا والمستقيمات والمثلثات لإعادة توصيلها.',
     questions:[
       {type:'tf', prompt:'المستقيمان المتعامدان يشكّلان عند تقاطعهما زاوية قياسها 80°.', answer:false},
-      {type:'mcq', prompt:'مجموع زوايا المثلث يساوي:', options:['90°','180°','270°','360°'], correct:1},
+      {type:'mcq', prompt:'مجموع أقياس زوايا المثلث يساوي:', options:['90°','180°','270°','360°'], correct:1},
       {type:'fill', prompt:'زاويتان متتامتان، قياس الأولى 35°. فإن قياس الثانية = ؟ (بالدرجة)', answer:55},
       {type:'mcq', prompt:'في التناظر المركزي بالنسبة لنقطة O، نظير النقطة A هو A′ بحيث:', options:['O منتصف القطعة [AA′]','A = A′','OA ⟂ OA′','لا توجد علاقة بينهما'], correct:0},
       {type:'tf', prompt:'التناظر المركزي يحافظ على قياسات الأطوال والزوايا.', answer:true},
       {type:'seq', prompt:'رتّب خطوات إنشاء محور قطعة مستقيمة بالمدور والمسطرة:', items:['نحدد نقطتي تقاطع الأقواس ','ضع رأس المدور في أحد طرفي القطعة وارسم قوسين أحدهما فوق القطعة و الآخر تحتها','بنفس فتحة المدورعلى الطرف الثاني من القطعة المستقيمة نرسم قوسين احدهما فوق القطعة و الآخر تحتها ','نربط بين النقطتين لتحديد محور القطعة المستقيمة'], correctOrder:['ضع رأس المدور في أحد طرفي القطعة وارسم قوسين أحدهما فوق القطعة و الآخر تحتها','بنفس فتحة المدورعلى الطرف الثاني من القطعة المستقيمة نرسم قوسين احدهما فوق القطعة و الآخر تحتها ','نحدد نقطتي تقاطع الأقواس ','نربط بين النقطتين لتحديد محور القطعة المستقيمة'],},
       {type:'fill', prompt:'زاويتان متجاورتان مجموعهما 190°. إذا كانت الأولى 110°، فإن الثانية = ؟ (بالدرجة)', answer:80, timed:15},
       {type:'mcq', prompt:'إذا كان المستقيمان (d1) و(d2) متوازيين، فإن الزاويتين المتبادلتين داخليًا:', options:['متساويتان','متكاملتان','متتامتان','لا يمكن تحديد ذلك'], correct:0},
-      {type:'fill', prompt:'نصف قطر دائرة طوله4cm. فإن محيطها = ؟ ', answer:25.12}
+      {type:'fill', prompt:'نصف قطر دائرة طوله4cm. إذن محيطها هو = ؟ ', answer:25.12 , tol:0.1}
     ]
   },
   {
     key:'sensors', part:'sensors', icon:'📡',
     title:'المرحلة 3 — تركيب نظام الاستشعار',
-    mission:'معايرة نظام الاستشعار باستعمال الأعداد النسبية، المعلم، والعبارات الحرفية.',
+    mission:'معايرة نظام الاستشعار باستعمال الأعداد النسبية،والعبارات الحرفية.',
     intro:'يحتاج الاستشعار إلى حل تحديات الأعداد النسبية والمعادلات لتفعيله.',
     questions:[
       {type:'mcq', prompt:'احسب: <span dir="ltr">(−5) + 3 = ?</span>', options:['−2','2','−8','8'], correct:0},
       {type:'tf', prompt:'العدد (−7) أصغر من العدد (−3).', answer:true},
       {type:'fill', prompt:'احسب: <span dir="ltr">(−8) − (−2) =?', answer:-6},
-      {type:'mcq', prompt:'في معلم متعامد متجانس لدينا A(2,3) و B(2,7). فإن المسافة AB = ؟', options:['5','4','7','9'], correct:1},
+      {type:'mcq', prompt:'أي من الأعداد النسبية التالية هو الأكبر', options:['-1','+2','-5','0'], correct:1},
       {type:'match', prompt:'صل كل عبارة حرفية بصيغتها المبسّطة:', pairs:[['2x + 3x','5x'],['10x − 4x','6x'],['2x + x -3x','0'],['8x − 5x','3x']]},
-      {type:'fill', prompt:'حلّ المعادلة:<span dir="ltr"> x + 7 = 12 ⇒ x = ?</span>', answer:5, timed:15},
+      {type:'fill', prompt:'حلّ المعادلة:<span dir="ltr"> x + 7 = 12 ⇒ x = ?</span>', answer:5, timed:20},
       {type:'mcq', prompt:'حلّ المعادلة: <span dir="ltr"> 3x = 21 ⇒ x = ?</span>', options:['7','6','8','9'], correct:0},
       {type:'fill', prompt:'معادلة من الشكل <span dir="ltr">b = x ÷ a</span>: إذا كان  <span dir="ltr">20= x ÷ 4</span>، فإن <span dir="ltr">x = ?</span>', answer:80},
       {type:'tf', prompt:'حاصل ضرب عددين نسبيين مختلفين في الإشارة يكون موجبا.', answer:false}
@@ -854,9 +854,9 @@ const STAGES=[
       {type:'fill', prompt:'مساحة مستطيل طوله8cm وعرضه5cm هي:', answer:40},
       {type:'mcq', prompt:'مساحة معيّن قطراه 6 cm و8 cm هي:', options:['24','48','14','28'], correct:0},
       {type:'match', prompt:'صل كل شكل رباعي بخاصية أقطاره:', pairs:[['المربع','الأقطار متساوية ومتعامدة ومنصّفة'],['المستطيل','الأقطار متساوية ومنصّفة'],['المعين','الأقطار متعامدة ومنصّفة'],['متوازي الأضلاع','الأقطار تتناصف فقط']]},
-      {type:'fill', prompt:'احسب: 25% من 200 = ؟', answer:50, timed:15},
+      {type:'fill', prompt:'احسب:<span dir="ltr">25%</span> من 200 = ؟', answer:50, timed:20},
       {type:'mcq', prompt:'أوجد x في التناسب: \\(\\frac{3}{4}\\) = \\(\\frac{x}{12}\\)', options:['16','6','8','9'], correct:3},
-      {type:'fill', prompt:'<span dir="ltr">2,5Km=m?</span>', answer:2500},
+      {type:'fill', prompt:'حوّل ما يلي :<span dir="ltr">2,5Km=m?</span>', answer:2500},
       {type:'tf', prompt:'في جدول تناسبية، إذا كان سعر <span dir="ltr">2Kg</span> من التفاح هو <span dir="ltr">300DA </span> فسعر <span dir="ltr">5Kg</span> هو <span dir="ltr">750DA</span> ', answer:true}
     ]
   },
@@ -872,7 +872,7 @@ const STAGES=[
       {type:'mcq', prompt:'يمثل مخطط دائري توزيع التلاميذ، إذا كان قياس زاوية قطاع تلاميذ الرياضة هو 90° ، فما هي نسبتهم المئوية؟', options:['10','90','25','50'], correct:2},
       {type:'fill', prompt:'ما هو مجموع التكرارات النسبية لجميع فئات سلسلة إحصائية', answer:1},
       {type:'mcq', prompt:'المساحة الجانبية لموشور قائم تساوي:', options:['محيط القاعدة × الارتفاع','مساحة القاعدة × الارتفاع','نصف محيط القاعدة × الارتفاع','مساحة القاعدة فقط'], correct:0},
-      {type:'fill', prompt:'مساحة دائرة نصف قطرها<span dir="ltr">2cm </span> (خذ π ≈ 3.14) = ؟<span dir="ltr">cm² </span>', answer:12.56, tol:0.1, timed:10},
+      {type:'fill', prompt:'مساحة دائرة نصف قطرها<span dir="ltr">2cm </span> (خذ π ≈ 3.14) = ؟<span dir="ltr">cm² </span>', answer:12.56, tol:0.1, timed:20},
       {type:'seq', prompt:'رتّب خطوات حل مشكلة رياضية بطريقة منهجية:', items:['تحقق من النتيجة وتأكد من منطقيتها','اقرأ المشكلة بعناية وحدد المعطيات والمطلوب','نفّذ الحل بإجراء الحسابات اللازمة','ضع خطة للحل واختر القانون المناسب'], correctOrder:['اقرأ المشكلة بعناية وحدد المعطيات والمطلوب','ضع خطة للحل واختر القانون المناسب','نفّذ الحل بإجراء الحسابات اللازمة','تحقق من النتيجة وتأكد من منطقيتها']},
       {type:'tf', prompt:'المساحة الجانبية لأسطوانة دوران تساوي محيط القاعدة × الارتفاع.', answer:true}
     ]
@@ -1075,8 +1075,8 @@ const val = parseFloat(cleaned);    const tol = q.tol != null ? q.tol : 0.01;
 
 } else {
 
-   if (raw.trim().toLowerCase() === q.answer.toString().trim().toLowerCase()) {
-        input.style.borderColor = 'var(--green)';
+if (raw.trim().replace(/\s+/g, '').toLowerCase() === q.answer.toString().trim().replace(/\s+/g, '').toLowerCase()) {
+          input.style.borderColor = 'var(--green)';
         registerCorrect();
     } else {
         input.classList.add('wrong');
@@ -1118,11 +1118,10 @@ function renderSeq(q,body){
     submitBtn.disabled=chosen.length!==q.items.length;
   }
   function renderAll(){
-     renderPool(); 
-     renderTray();
-      
-
-  }
+   renderPool(); 
+   renderTray();
+   MathJax.typesetPromise([pool, tray]);
+}
   renderAll();
   submitBtn.addEventListener('click',()=>{
     sndClick();
