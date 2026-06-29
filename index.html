@@ -1037,13 +1037,25 @@ function renderTF(q,body){
 
 function renderFill(q,body){
   const row=document.createElement('div'); row.className='fill-row';
-  const input=document.createElement('input'); input.className='fill-input'; input.type='text';
-  input.placeholder='أدخل الناتج هنا'; input.inputMode='decimal';
-  const btn=document.createElement('button'); btn.className='primary-btn'; btn.textContent='تأكيد الإجابة';
-  function submit(){
+ const input = document.createElement('input');
+input.className = 'fill-input';
+input.type = 'text';
+
+if (typeof q.answer === "number") {
+    input.inputMode = "decimal";
+    input.placeholder = "أدخل الناتج هنا";
+} else {
+    input.inputMode = "text";
+    input.placeholder = "أدخل الإجابة هنا";
+}
+
+const btn = document.createElement('button');
+btn.className = 'primary-btn';
+btn.textContent = 'تأكيد الإجابة';
+
+function submit() {
     sndClick();
     const raw = input.value.trim();
-
 if (typeof q.answer === "number") {
     
     const val = parseFloat(raw.replace(',', '.'));
