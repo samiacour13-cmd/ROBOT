@@ -801,7 +801,7 @@ const STAGES=[
     questions:[
       {type:'mcq', prompt:'عند حساب العبارة <span dir="ltr">A=25+5×2-7</span> بدون أقواس، ما هي العملية التي يجب إجراؤها أولاً؟', options:['الضرب','الجمع','الطرح','لا يهم'], correct:0},
       {type:'tf', prompt:'العدد 0.5 يساوي الكسر \\(\\frac{1}{2}\\)', answer:true},
-      {type:'fill', prompt:'في القسمة الإقليدية لِـ 47 على 6، الباقي يساوي:', answer:5},
+      {type:'fill', prompt:'في القسمة الإقليدية لِـ 47 على 6 الباقي يساوي:', answer:5},
       {type:'mcq', prompt:'أيّ الكسور التالية أكبر؟', options:['\\(\\frac{3}{4}\\)','\\(\\frac{5}{8}\\)','\\(\\frac{1}{4}\\)','\\(\\frac{1}{2}\\)'], correct:0},
       {type:'tf', prompt:'لجمع كسرين لهما نفس المقام، نجمع البسطين ونحتفظ بنفس المقام.', answer:true},
       {type:'fill', prompt:'ما هي الخاصية التي تسمح لنا بكتابة العبارة k(a+b) على الشكل ka+kb:', answer:'التوزيع'},
@@ -1072,7 +1072,7 @@ if (typeof q.answer === "number") {
 
 } else {
 
-    if (raw === q.answer) {
+   if (raw.trim().toLowerCase() === q.answer.toString().trim().toLowerCase()) {
         input.style.borderColor = 'var(--green)';
         registerCorrect();
     } else {
