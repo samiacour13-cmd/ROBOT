@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>مخبر تجميع الروبوت — بروتوكول الذكاء الاصطناعي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+  window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']]
+  }
+  };
+  </script>
+<style>
+:root{
+  --void:#04070d;
+  --deep:#081320;
+  --panel:#0d1c2e;
+  --panel2:#112538;
+  --line:#1f3a57;
+  --line-soft:#16283d;
+  --cyan:#3fe8ff;
+  --cyan-soft:#9ff5ff;
+  --blue:#2f8dff;
+  --amber:#ffb23d;
+  --green:#37f7b2;
+  --red:#ff4566;
+  --ink:#eaf6ff;
+  --ink-dim:#7d9bb8;
+  --font:'Cairo',sans-serif;
+  --mono:'Share Tech Mono',monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{
+  background:var(--void);
+  color:var(--ink);
+  font-family:var(--font);
+  min-height:100%;
+  overflow-x:hidden;
+}
+button{font-family:var(--font); cursor:pointer; border:none; background:none; color:inherit;}
+button:focus-visible, input:focus-visible{outline:2px solid var(--cyan-soft); outline-offset:2px;}
+ul{list-style:none;}
+.hidden{display:none !important;}
+
+#bg-fx{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse at 20% 15%, rgba(47,141,255,.12), transparent 55%),
+    radial-gradient(ellipse at 85% 80%, rgba(63,232,255,.10), transparent 55%),
+    linear-gradient(180deg, var(--void), var(--deep) 60%, var(--void));
+}
+#bg-fx::before{
+  content:''; position:absolute; inset:0;
+  background-image:repeating-linear-gradient(0deg, rgba(63,232,255,.035) 0px, rgba(63,232,255,.035) 1px, transparent 1px, transparent 3px);
+  mix-blend-mode:screen;
+}
+.particle{
+  position:absolute; width:3px; height:3px; border-radius:50%;
+  background:var(--cyan-soft); opacity:.5; filter:blur(.5px);
+  animation:float linear infinite;
+}
+@keyframes float{
+  from{transform:translateY(0) translateX(0); opacity:0;}
+  10%{opacity:.6;} 90%{opacity:.6;}
+  to{transform:translateY(-120vh) translateX(20px); opacity:0;}
+}
+
+.lab{position:relative; z-index:1; max-width:1360px; margin:0 auto; padding:14px 16px 40px; min-height:100vh; transition:transform .12s ease;}
+.lab.shake{animation:shake .35s;}
+@keyframes shake{
+  0%,100%{transform:translateX(0);} 20%{transform:translateX(-6px);} 40%{transform:translateX(5px);}
+  60%{transform:translateX(-4px);} 80%{transform:translateX(3px);}
+}
+
+.topbar{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  background:linear-gradient(180deg, var(--panel2), var(--panel));
+  border:1px solid var(--line); border-radius:14px;
+  padding:10px 16px; margin-bottom:14px;
+  box-shadow:0 0 24px rgba(63,232,255,.06), inset 0 0 30px rgba(0,0,0,.3);
+}
+.tb-item{display:flex; align-items:center; gap:8px; font-size:14px; color:var(--ink-dim); padding:6px 12px; border-radius:10px; background:rgba(63,232,255,.04); border:1px solid var(--line-soft);}
+.tb-item b{font-family:var(--mono); color:var(--cyan-soft); font-size:15px; letter-spacing:.5px;}
+.tb-alert{flex:1; min-width:160px; text-align:center; font-size:13px; color:var(--cyan-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .25s;}
+.tb-alert.danger{color:var(--red); font-weight:700;}
+.tb-mute{width:36px; height:36px; border-radius:50%; border:1px solid var(--line-soft); background:rgba(63,232,255,.05); font-size:16px; display:flex; align-items:center; justify-content:center;}
+.tb-mute:hover{background:rgba(63,232,255,.12);}
+
+.lab-grid{
+  display:grid;
+  grid-template-columns:230px 1fr 280px;
+  grid-template-areas:"assistant platform dashboard";
+  gap:16px;
+  direction:ltr;
+}
+.assistant-panel{grid-area:assistant;}
+.stage-platform{grid-area:platform;}
+.dashboard-panel{grid-area:dashboard;}
+@media (max-width:980px){
+  .lab-grid{grid-template-columns:1fr; grid-template-areas:"platform" "dashboard" "assistant";}
+}
+
+.panel{
+  background:linear-gradient(180deg, var(--panel2), var(--panel));
+  border:1px solid var(--line); border-radius:16px; padding:16px;
+  box-shadow:0 0 30px rgba(0,0,0,.35), inset 0 0 24px rgba(63,232,255,.03);
+  direction:rtl;
+}
+
+.assistant-panel{display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center;}
+.assistant-panel h3{font-size:13px; color:var(--ink-dim); letter-spacing:.5px; font-weight:700;}
+.bot-stage{width:128px; height:128px; position:relative;}
+.bot-ring{position:absolute; inset:0; border-radius:50%; border:2px dashed var(--line); animation:spin 14s linear infinite;}
+.bot[data-state="scanning"] .bot-ring{border-color:var(--cyan); animation-duration:2.4s;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.bot-face{
+  position:absolute; inset:14px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #1c3450, #08121c 70%);
+  border:2px solid var(--line); box-shadow:0 0 20px rgba(63,232,255,.15) inset;
+  display:flex; align-items:center; justify-content:center;
+}
+.bot-eyes{display:flex; gap:14px;}
+.bot-eye{width:14px; height:14px; border-radius:50%; background:var(--blue); box-shadow:0 0 10px var(--blue); transition:background .25s, box-shadow .25s; animation:blink 4.5s ease-in-out infinite;}
+@keyframes blink{0%,92%,100%{transform:scaleY(1);} 95%{transform:scaleY(.12);}}
+.bot[data-state="happy"] .bot-eye, .bot[data-state="celebration"] .bot-eye{background:var(--green); box-shadow:0 0 16px var(--green);}
+.bot[data-state="error"] .bot-eye{background:var(--red); box-shadow:0 0 16px var(--red); animation:none;}
+.bot[data-state="talking"] .bot-eye{background:var(--cyan); box-shadow:0 0 14px var(--cyan);}
+.bot-mouth{position:absolute; bottom:30px; width:42px; height:4px; border-radius:3px; background:var(--line); transition:all .15s;}
+.bot[data-state="talking"] .bot-mouth{animation:talk .35s steps(2) infinite;}
+@keyframes talk{0%{height:4px;}50%{height:11px; background:var(--cyan);}100%{height:4px;}}
+.bot[data-state="happy"] .bot-mouth, .bot[data-state="celebration"] .bot-mouth{height:8px; border-radius:0 0 16px 16px; background:var(--green);}
+.bot[data-state="error"] .bot-mouth{background:var(--red); height:4px;}
+.bot-spark{position:absolute; inset:-6px; border-radius:50%; opacity:0; pointer-events:none;}
+.bot[data-state="celebration"] .bot-spark{opacity:1; background:radial-gradient(circle, rgba(55,247,178,.35), transparent 70%); animation:pulse-soft 1s ease-in-out infinite;}
+@keyframes pulse-soft{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
+.assistant-bubble{background:rgba(63,232,255,.05); border:1px solid var(--line-soft); border-radius:12px; padding:10px 12px; font-size:13.5px; line-height:1.6; color:var(--ink); min-height:64px; width:100%;}
+.assistant-name{font-size:11px; color:var(--cyan-soft); letter-spacing:.5px; margin-bottom:4px; display:block; font-weight:700;}
+
+.stage-platform{display:flex; flex-direction:column; gap:14px;}
+.platform-frame{
+  position:relative; background:radial-gradient(ellipse at 50% 30%, rgba(47,141,255,.10), transparent 65%);
+  border:1px solid var(--line); border-radius:18px; padding:10px;
+  display:flex; align-items:center; justify-content:center; min-height:300px; overflow:hidden;
+}
+.platform-frame::before{
+  content:''; position:absolute; left:8%; right:8%; bottom:6%; height:10px; border-radius:50%;
+  background:radial-gradient(ellipse, rgba(63,232,255,.18), transparent 70%); filter:blur(2px);
+}
+.scan-line{
+  position:absolute; left:6%; right:6%; height:2px; top:10%;
+  background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity:.55; animation:scan 3.6s ease-in-out infinite;
+}
+@keyframes scan{0%{top:8%;}50%{top:88%;}100%{top:8%;}}
+
+/* ===== ROBOT SVG ANIMATIONS ===== */
+#robotSvg{width:min(280px,70%); height:auto; position:relative; z-index:2; filter:drop-shadow(0 0 16px rgba(63,232,255,.12)); transform-origin:center bottom;}
+
+/* Celebration dance animation */
+@keyframes robotDance{
+  0%   {transform:translateY(0) rotate(0deg);}
+  10%  {transform:translateY(-12px) rotate(-4deg);}
+  20%  {transform:translateY(-6px) rotate(4deg);}
+  30%  {transform:translateY(-14px) rotate(-3deg);}
+  40%  {transform:translateY(-4px) rotate(3deg);}
+  50%  {transform:translateY(-16px) rotate(-5deg);}
+  60%  {transform:translateY(-6px) rotate(5deg);}
+  70%  {transform:translateY(-12px) rotate(-3deg);}
+  80%  {transform:translateY(-4px) rotate(3deg);}
+  90%  {transform:translateY(-10px) rotate(-4deg);}
+  100% {transform:translateY(0) rotate(0deg);}
+}
+
+/* Arm wave animations */
+@keyframes armWaveLeft{
+  0%,100%{transform:rotate(0deg); transform-origin:90% 50%;}
+  25%    {transform:rotate(-35deg); transform-origin:90% 50%;}
+  50%    {transform:rotate(10deg); transform-origin:90% 50%;}
+  75%    {transform:rotate(-45deg); transform-origin:90% 50%;}
+}
+@keyframes armWaveRight{
+  0%,100%{transform:rotate(0deg); transform-origin:10% 50%;}
+  25%    {transform:rotate(40deg); transform-origin:10% 50%;}
+  50%    {transform:rotate(-12deg); transform-origin:10% 50%;}
+  75%    {transform:rotate(50deg); transform-origin:10% 50%;}
+}
+@keyframes legBounce{
+  0%,100%{transform:scaleY(1);}
+  50%    {transform:scaleY(.88); transform-origin:top center;}
+}
+@keyframes headBob{
+  0%,100%{transform:translateY(0);}
+  50%    {transform:translateY(-6px);}
+}
+@keyframes eyeGlow{
+  0%,100%{opacity:1;}
+  50%    {opacity:.4;}
+}
+@keyframes coreRotate{
+  from{transform:rotate(0deg); transform-origin:180px 305px;}
+  to  {transform:rotate(360deg); transform-origin:180px 305px;}
+}
+@keyframes corePulse{
+  0%,100%{opacity:.8; r:36;}
+  50%    {opacity:1; r:44;}
+}
+
+/* Active celebration classes applied via JS */
+#robotSvg.dancing { animation: robotDance 1.2s ease-in-out infinite; }
+#robotSvg.dancing #part-arms { animation: none; }
+#robotSvg.dancing #part-arms .arm-left { animation: armWaveLeft 0.9s ease-in-out infinite; }
+#robotSvg.dancing #part-arms .arm-right { animation: armWaveRight 0.9s ease-in-out 0.15s infinite; }
+#robotSvg.dancing #part-legs { animation: legBounce 0.6s ease-in-out infinite; }
+#robotSvg.dancing #part-head { animation: headBob 0.8s ease-in-out infinite; }
+#robotSvg.dancing .core-inner { animation: coreRotate 2s linear infinite; }
+#robotSvg.dancing .core-pulse { animation: corePulse 0.8s ease-in-out infinite; }
+#robotSvg.dancing .eye-glow   { animation: eyeGlow 0.4s ease-in-out infinite; }
+
+/* Activation glow */
+@keyframes activationGlow{
+  0%  {opacity:0; transform:scale(0.8);}
+  50% {opacity:1;}
+  100%{opacity:.7; transform:scale(1.1);}
+}
+#finalGlow{opacity:0; transition:opacity 1s ease;}
+.activated #finalGlow{opacity:1; animation:activationGlow .8s ease-out forwards;}
+
+/* Energy ring animation */
+@keyframes energyRing{
+  from{stroke-dashoffset:628; opacity:.8;}
+  to  {stroke-dashoffset:0; opacity:.2;}
+}
+.energy-ring{
+  fill:none; stroke:var(--cyan); stroke-width:3;
+  stroke-dasharray:628; stroke-dashoffset:628;
+  animation:none;
+}
+#robotSvg.dancing .energy-ring{animation:energyRing 1.4s linear infinite;}
+
+.part .shape{fill:rgba(63,232,255,.04); stroke:#27445f; stroke-width:2; stroke-dasharray:5 4; transition:all .7s ease;}
+.part .glowdot{fill:#16283d; opacity:.4; transition:all .5s ease;}
+.part.unlocked .shape{fill:url(#metalGrad); stroke:var(--cyan); stroke-dasharray:0; filter:url(#glowFilter);}
+.part.unlocked .glowdot{fill:var(--cyan-soft); opacity:1; filter:url(#glowFilter);}
+.part.weld-flash{animation:weld .55s ease;}
+@keyframes weld{0%{filter:brightness(1);}40%{filter:brightness(2.4) saturate(1.4);}100%{filter:brightness(1);}}
+.activated .part.unlocked .shape{stroke:var(--cyan-soft);}
+
+/* Celebration banner under robot */
+.celebrate-banner{
+  position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+  background:linear-gradient(90deg, rgba(55,247,178,.2), rgba(63,232,255,.3), rgba(55,247,178,.2));
+  border:1px solid var(--green); border-radius:20px;
+  padding:5px 20px; font-size:13px; font-weight:700; color:var(--green);
+  white-space:nowrap; opacity:0; transition:opacity .5s ease;
+  font-family:var(--font);
+}
+.celebrate-banner.show{opacity:1; animation:bannerFloat 2s ease-in-out infinite;}
+@keyframes bannerFloat{
+  0%,100%{transform:translateX(-50%) translateY(0);}
+  50%    {transform:translateX(-50%) translateY(-4px);}
+}
+
+/* Dance particles around robot */
+.dance-particle{
+  position:absolute; width:6px; height:6px; border-radius:50%;
+  pointer-events:none; opacity:0;
+}
+.dance-particle.active{
+  animation:danceFloat 1.8s ease-out infinite;
+}
+@keyframes danceFloat{
+  0%  {opacity:0; transform:translate(0,0) scale(0);}
+  15% {opacity:1; transform:translate(var(--dx1), var(--dy1)) scale(1);}
+  85% {opacity:.7; transform:translate(var(--dx2), var(--dy2)) scale(.8);}
+  100%{opacity:0; transform:translate(var(--dx3), var(--dy3)) scale(.2);}
+}
+
+.question-deck{
+  background:rgba(8,18,28,.55); border:1px solid var(--line-soft); border-radius:16px; padding:18px;
+  min-height:230px; display:flex; flex-direction:column; gap:14px;
+}
+.q-topline{display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--ink-dim);}
+.q-badge{padding:3px 10px; border-radius:20px; border:1px solid var(--line-soft); background:rgba(63,232,255,.05); font-size:11.5px;}
+.q-timer{display:none; align-items:center; gap:6px; font-family:var(--mono); color:var(--amber); font-size:15px;}
+.q-timer.show{display:flex;}
+.q-timer .ring{width:22px; height:22px; border-radius:50%; border:3px solid var(--line-soft); border-top-color:var(--amber); animation:spin 1s linear infinite;}
+.q-prompt{font-size:17px; font-weight:700; line-height:1.65;}
+.q-body{display:flex; flex-direction:column; gap:10px;}
+
+.opt-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+@media(max-width:560px){.opt-grid{grid-template-columns:1fr;}}
+.opt-btn{background:rgba(63,232,255,.05); border:1px solid var(--line-soft); border-radius:12px; padding:12px 14px; font-size:15px; text-align:center; transition:all .15s; color:var(--ink);}
+.opt-btn:hover:not(:disabled){background:rgba(63,232,255,.13); border-color:var(--cyan);}
+.opt-btn.correct{background:rgba(55,247,178,.18); border-color:var(--green); color:var(--green); font-weight:700;}
+.opt-btn.wrong{background:rgba(255,69,102,.18); border-color:var(--red); color:var(--red);}
+.opt-btn:disabled{opacity:.45; cursor:not-allowed;}
+
+.tf-row{display:flex; gap:12px;}
+.tf-btn{flex:1; padding:16px; border-radius:12px; font-size:16px; font-weight:700; border:1px solid var(--line-soft); background:rgba(63,232,255,.05);}
+.tf-btn.t{color:var(--green);} .tf-btn.f{color:var(--red);}
+.tf-btn:hover:not(:disabled){background:rgba(63,232,255,.13);}
+
+.fill-row{display:flex; gap:10px; flex-wrap:wrap;}
+.fill-input{flex:1; min-width:160px; background:var(--void); border:1px solid var(--line-soft); border-radius:10px; padding:12px 14px; color:var(--cyan-soft); font-family:var(--mono); font-size:16px; text-align:center;}
+.fill-input.wrong{border-color:var(--red); animation:shakeInput .3s;}
+@keyframes shakeInput{0%,100%{transform:translateX(0);}30%{transform:translateX(-5px);}60%{transform:translateX(5px);}}
+.primary-btn{background:linear-gradient(180deg, #1f4f7a, #163a5c); border:1px solid var(--cyan); color:var(--cyan-soft); padding:12px 20px; border-radius:10px; font-weight:700; font-size:14.5px; transition:all .15s;}
+.primary-btn:hover{box-shadow:0 0 16px rgba(63,232,255,.4);}
+.primary-btn:disabled{opacity:.4; cursor:not-allowed;}
+
+.seq-tray, .seq-pool{display:flex; gap:8px; flex-wrap:wrap; min-height:46px;}
+.seq-pool{padding-top:4px;}
+.seq-tray{background:rgba(0,0,0,.25); border:1px dashed var(--line-soft); border-radius:10px; padding:8px;}
+.seq-chip{background:rgba(63,232,255,.08); border:1px solid var(--line-soft); border-radius:8px; padding:8px 12px; font-size:13.5px;}
+.seq-chip.placed{background:rgba(63,232,255,.18); border-color:var(--cyan);}
+.seq-chip.tray-chip{background:rgba(47,141,255,.18); border-color:var(--blue); display:flex; align-items:center; gap:6px;}
+.seq-num{display:inline-flex; width:18px; height:18px; border-radius:50%; background:var(--blue); color:#fff; font-size:11px; align-items:center; justify-content:center; font-family:var(--mono);}
+
+.match-cols{display:flex; gap:16px;}
+.match-col{flex:1; display:flex; flex-direction:column; gap:8px;}
+.match-item{background:rgba(63,232,255,.06); border:1px solid var(--line-soft); border-radius:10px; padding:10px 12px; font-size:13.5px; text-align:center; min-height:42px; display:flex; align-items:center; justify-content:center;}
+.match-item.selected{border-color:var(--cyan); background:rgba(63,232,255,.18);}
+.match-item.matched{border-color:var(--green); background:rgba(55,247,178,.12); color:var(--green); opacity:.7;}
+.match-item.shake-wrong{animation:shakeInput .3s; border-color:var(--red);}
+
+.feedback-line{font-size:13px; min-height:18px; color:var(--ink-dim);}
+.feedback-line.ok{color:var(--green);} .feedback-line.bad{color:var(--red);}
+
+.dashboard-panel h3{font-size:13px; color:var(--ink-dim); margin-bottom:10px; letter-spacing:.5px;}
+.mission-box{background:rgba(63,232,255,.06); border:1px solid var(--line-soft); border-radius:12px; padding:10px 12px; font-size:13px; margin-bottom:14px; line-height:1.6;}
+.mission-box b{color:var(--cyan-soft); display:block; margin-bottom:3px; font-size:12px;}
+.parts-list{display:flex; flex-direction:column; gap:6px; margin-bottom:14px;}
+.parts-list li{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-dim); padding:6px 8px; border-radius:8px; background:rgba(255,255,255,.02);}
+.parts-list li .dot{width:9px; height:9px; border-radius:50%; background:var(--line); flex-shrink:0;}
+.parts-list li.done{color:var(--ink);} .parts-list li.done .dot{background:var(--green); box-shadow:0 0 8px var(--green);}
+.stat-block{margin-bottom:14px;}
+.stat-label{display:flex; justify-content:space-between; font-size:12px; color:var(--ink-dim); margin-bottom:5px;}
+.stat-label span:last-child{font-family:var(--mono); color:var(--cyan-soft);}
+.bar-track{height:9px; border-radius:6px; background:rgba(255,255,255,.05); overflow:hidden; border:1px solid var(--line-soft);}
+.bar-fill{height:100%; border-radius:6px; transition:width .5s ease;}
+.bar-fill.assembly{background:linear-gradient(90deg, var(--blue), var(--cyan));}
+.bar-fill.energy{background:linear-gradient(90deg, #ff9d3d, var(--amber));}
+.bar-fill.stage{background:linear-gradient(90deg, var(--green), #74ffce);}
+.points-val{font-family:var(--mono); font-size:26px; color:var(--cyan-soft); text-shadow:0 0 12px rgba(63,232,255,.4);}
+.badges-row{display:flex; gap:8px; flex-wrap:wrap;}
+.badge{width:38px; height:38px; border-radius:50%; border:1px solid var(--line-soft); background:rgba(255,255,255,.03); display:flex; align-items:center; justify-content:center; font-size:16px; opacity:.35;}
+.badge.unlocked{opacity:1; border-color:var(--amber); background:rgba(255,178,61,.12); box-shadow:0 0 10px rgba(255,178,61,.3);}
+
+.fx-layer{position:fixed; inset:0; z-index:30; pointer-events:none;}
+.spark{position:absolute; width:5px; height:5px; border-radius:50%; background:var(--cyan-soft); box-shadow:0 0 8px var(--cyan-soft); animation:sparkfly .7s ease-out forwards;}
+@keyframes sparkfly{0%{opacity:1; transform:translate(0,0) scale(1);}100%{opacity:0; transform:translate(var(--dx), var(--dy)) scale(.3);}}
+.alarm-vignette{position:fixed; inset:0; z-index:25; pointer-events:none; opacity:0; background:radial-gradient(ellipse at center, transparent 55%, rgba(255,69,102,.35)); transition:opacity .15s;}
+.alarm-vignette.active{opacity:1; animation:alarmpulse .5s ease-in-out 2;}
+@keyframes alarmpulse{0%,100%{opacity:.3;}50%{opacity:.85;}}
+.glitch{animation:glitchAnim .4s linear;}
+@keyframes glitchAnim{
+  0%{filter:none;} 15%{filter:hue-rotate(40deg) saturate(2); transform:translateX(2px);}
+  30%{filter:none; transform:translateX(-2px);} 45%{filter:hue-rotate(-30deg); transform:translateX(1px);}
+  60%{filter:none;} 100%{filter:none; transform:translateX(0);}
+}
+
+.overlay{
+  position:fixed; inset:0; z-index:50; background:rgba(2, 6, 12, 0.863); backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+  flex-direction: column;
+}
+.overlay img{
+  max-width:40%; width:100%; margin-bottom:18px;
+  border-radius:12px; border:1px solid var(--line); box-shadow:0 0 30px rgba(63,232,255,.15);
+  
+}
+#introOverlay p{
+  padding:1rem 30%; font-size:15px; color:var(--ink-dim); text-align:center;
+  font-weight:bolder; margin-bottom:18px;
+}
+.overlay-card{
+  max-width:560px; width:100%; background:linear-gradient(180deg, var(--panel2), var(--panel));
+  border:1px solid var(--line); border-radius:20px; padding:30px; text-align:center;
+  box-shadow:0 0 60px rgba(63,232,255,.15);
+}
+.overlay-card h1{font-size:22px; color:var(--cyan-soft); margin-bottom:12px; line-height:1.5;}
+.overlay-card p{font-size:14.5px; color:var(--ink-dim); line-height:1.85; margin-bottom:18px;}
+.overlay-card .stars{font-size:30px; letter-spacing:6px; margin:14px 0; color:var(--line);}
+.overlay-card .stars span.lit{color:var(--amber); text-shadow:0 0 14px var(--amber);}
+.stage-icon{font-size:46px; margin-bottom:10px;}
+
+#fireworksCanvas{position:fixed; inset:0; z-index:40; pointer-events:none;}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+}
+</style>
+</head>
+<body>
+
+<div id="bg-fx"></div>
+<div class="fx-layer" id="fxLayer"></div>
+<div class="alarm-vignette" id="alarmVignette"></div>
+<canvas id="fireworksCanvas"></canvas>
+
+<div class="lab" id="lab">
+  <header class="topbar">
+    <div class="tb-item">⏱ <b id="timerDisplay">00:00</b></div>
+    <div class="tb-item">المرحلة <b id="levelDisplay">1</b>/5</div>
+    <div class="tb-item">النقاط <b id="scoreDisplay">0</b></div>
+    <div class="tb-alert" id="alertTicker">جاري الاتصال بالنظام المركزي للمخبر…</div>
+    <button class="tb-mute" id="muteBtn" title="كتم/تفعيل الصوت" aria-label="كتم الصوت">🔊</button>
+  </header>
+
+  <main class="lab-grid">
+    <aside class="panel assistant-panel" dir="rtl">
+      <h3>المساعد الذكي للمخبر</h3>
+      <div class="bot-stage">
+        <div class="bot" id="assistantBot" data-state="idle">
+          <div class="bot-ring"></div>
+          <div class="bot-face">
+            <div class="bot-eyes"><div class="bot-eye"></div><div class="bot-eye"></div></div>
+            <div class="bot-mouth"></div>
+          </div>
+          <div class="bot-spark"></div>
+        </div>
+      </div>
+      <div class="assistant-bubble">
+        <span class="assistant-name">يونيت-7 (Unit-7)</span>
+        <span id="assistantText">جاهز للمساعدة. أحتاج منك حل التحديات الرياضية لإعادة تجميعي.</span>
+      </div>
+    </aside>
+
+    <section class="stage-platform" dir="rtl">
+      <div class="platform-frame" id="platformFrame">
+        <div class="scan-line" id="scanLine"></div>
+
+        <!-- Dance particles -->
+        <div id="danceParticles"></div>
+
+        <svg id="robotSvg" viewBox="0 0 360 520" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#173352"/>
+              <stop offset="100%" stop-color="#0c2236"/>
+            </linearGradient>
+            <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3.2" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- Energy ring (visible when dancing) -->
+          <circle class="energy-ring" cx="180" cy="300" r="100"/>
+
+          <g id="finalGlow">
+            <ellipse cx="180" cy="300" rx="150" ry="220" fill="rgba(63,232,255,0.10)"/>
+          </g>
+
+          <g class="part" id="part-legs" data-part="legs">
+            <rect class="shape" x="132" y="400" width="38" height="92" rx="10"/>
+            <rect class="shape" x="190" y="400" width="38" height="92" rx="10"/>
+            <rect class="shape" x="122" y="486" width="58" height="16" rx="6"/>
+            <rect class="shape" x="180" y="486" width="58" height="16" rx="6"/>
+          </g>
+
+          <g class="part" id="part-arms" data-part="arms">
+            <!-- Left arm (robot's left = viewer's right) -->
+            <g class="arm-left">
+              <circle class="shape" cx="98" cy="252" r="20"/>
+              <rect class="shape" x="60" y="258" width="28" height="106" rx="10"/>
+              <circle class="shape glowdot" cx="74" cy="372" r="15"/>
+            </g>
+            <!-- Right arm -->
+            <g class="arm-right">
+              <circle class="shape" cx="262" cy="252" r="20"/>
+              <rect class="shape" x="272" y="258" width="28" height="106" rx="10"/>
+              <circle class="shape glowdot" cx="286" cy="372" r="15"/>
+            </g>
+          </g>
+
+          <g class="part" id="part-core" data-part="core">
+            <rect class="shape" x="108" y="228" width="144" height="172" rx="20"/>
+            <circle class="shape glowdot core-pulse" cx="180" cy="305" r="36"/>
+            <!-- Inner rotating ring -->
+            <g class="core-inner">
+              <circle class="shape glowdot" cx="180" cy="305" r="16"/>
+            </g>
+          </g>
+
+          <g class="part" id="part-sensors" data-part="sensors">
+            <circle class="shape glowdot" cx="132" cy="246" r="6"/>
+            <circle class="shape glowdot" cx="228" cy="246" r="6"/>
+            <circle class="shape" cx="180" cy="305" r="54" fill="none"/>
+            <circle class="shape glowdot" cx="180" cy="349" r="5"/>
+          </g>
+
+          <g class="part" id="part-head" data-part="head">
+            <line class="shape" x1="180" y1="118" x2="180" y2="92"/>
+            <circle class="shape glowdot" cx="180" cy="88" r="7"/>
+            <rect class="shape" x="138" y="118" width="84" height="82" rx="18"/>
+            <!-- Eyes glow during dance -->
+            <circle class="shape glowdot eye-glow" cx="162" cy="154" r="8"/>
+            <circle class="shape glowdot eye-glow" cx="198" cy="154" r="8"/>
+            <rect class="shape glowdot" x="158" y="176" width="44" height="6" rx="3"/>
+          </g>
+        </svg>
+
+        <!-- Celebration banner -->
+        <div class="celebrate-banner" id="celebrateBanner">🎉 الروبوت مفعّل بالكامل! 🎉</div>
+      </div>
+
+      <div class="question-deck" id="questionDeck">
+        <div style="text-align:center; padding:40px 10px; color:var(--ink-dim);">
+          اضغط على «بدء التشغيل» للانطلاق في المهمة…
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel dashboard-panel" dir="rtl">
+      <h3>لوحة التحكم بالمهمة</h3>
+      <div class="mission-box"><b>المهمة الحالية</b><span id="missionText">في انتظار بدء التشغيل…</span></div>
+      <ul class="parts-list" id="partsList"></ul>
+      <div class="stat-block">
+        <div class="stat-label"><span>نسبة التجميع</span><span id="assemblyPct">0%</span></div>
+        <div class="bar-track"><div class="bar-fill assembly" id="assemblyFill" style="width:0%"></div></div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label"><span>مستوى الطاقة</span><span id="energyPct">50%</span></div>
+        <div class="bar-track"><div class="bar-fill energy" id="energyFill" style="width:50%"></div></div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label"><span>تقدم المرحلة</span><span id="stageProgressLabel">0/0</span></div>
+        <div class="bar-track"><div class="bar-fill stage" id="stageProgressFill" style="width:0%"></div></div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label"><span>النقاط المكتسبة</span></div>
+        <div class="points-val" id="pointsDisplay">0</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-label"><span>شارات المخبر</span></div>
+        <div class="badges-row" id="badgesRow"></div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<!-- Overlays -->
+<div class="overlay" id="introOverlay">
+    <img src="24.png" alt="Stage Icon" />
+    <p >
+      في مخبر للروبوتات، تعطّل النظام أثناء التجميع النهائي لروبوت تعليمي فتفككت كل مكوناته. تم تعيينك لإعادة بنائه قطعة بقطعة.
+      حتى يكتمل الروبوت ويُفعَّل بالكامل حظ موفّق.
+    </p>
+    <button class="primary-btn" id="startBtn">▶ بدء التشغيل</button>
+</div>
+
+<div class="overlay hidden" id="stageIntroOverlay">
+  <div class="overlay-card">
+    <div class="stage-icon" id="stageIntroIcon">⚙️</div>
+    <h1 id="stageIntroTitle">المرحلة</h1>
+    <p id="stageIntroText"></p>
+    <button class="primary-btn" id="stageIntroBtn">ابدأ المرحلة</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="finaleOverlay">
+  <div class="overlay-card">
+    <div class="stage-icon">⚡🤖⚡</div>
+    <h1>تم تفعيل النظام بنجاح!</h1>
+    <p id="finaleText">اكتمل تجميع الروبوت بكل مكوناته، وأصبح جاهزًا للعمل بفضل عملك كمهندس متميز.</p>
+    <div class="stars" id="finaleStars"><span>★</span><span>★</span><span>★</span></div>
+    <p style="font-size:13px;">النقاط النهائية: <b id="finalScore" style="color:var(--cyan-soft); font-family:var(--mono);">0</b></p>
+    <button class="primary-btn" id="restartBtn">↻ إعادة التشغيل</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ AUDIO ============ */
+let audioCtx=null, muted=false;
+function ensureAudio(){ if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
+function tone(freq,dur,type,vol,delay){
+  if(muted||!audioCtx) return;
+  const t0=audioCtx.currentTime+(delay||0);
+  const osc=audioCtx.createOscillator(); const gain=audioCtx.createGain();
+  osc.type=type||'sine'; osc.frequency.setValueAtTime(freq,t0);
+  gain.gain.setValueAtTime(0.0001,t0);
+  gain.gain.exponentialRampToValueAtTime(vol||0.16,t0+0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(t0); osc.stop(t0+dur+0.02);
+}
+function sndCorrect(){ tone(523,0.12,'sine',0.18,0); tone(784,0.16,'sine',0.16,0.10); }
+function sndWrong(){ tone(160,0.22,'sawtooth',0.14,0); tone(110,0.28,'sawtooth',0.12,0.08); }
+function sndClick(){ tone(700,0.05,'square',0.07,0); }
+function sndStageComplete(){ [523,659,784,988].forEach((f,i)=>tone(f,0.18,'triangle',0.16,i*0.12)); }
+function sndActivation(){
+  [262,330,392,523,659,784,1046].forEach((f,i)=>tone(f,0.22,'sine',0.18,i*0.09));
+}
+function sndDancebeat(i){
+  const notes=[392,523,659,784,659,523];
+  tone(notes[i%notes.length],0.15,'triangle',0.14,0);
+}
+
+/* ============ FX ============ */
+const fxLayer=document.getElementById('fxLayer');
+const labEl=document.getElementById('lab');
+const alarmVignette=document.getElementById('alarmVignette');
+
+function sparkBurst(xRatio,yRatio,count){
+  const rect=document.getElementById('robotSvg').getBoundingClientRect();
+  const x=rect.left+rect.width*(xRatio==null?0.5:xRatio);
+  const y=rect.top+rect.height*(yRatio==null?0.5:yRatio);
+  for(let i=0;i<(count||14);i++){
+    const s=document.createElement('div'); s.className='spark';
+    const ang=Math.random()*Math.PI*2; const dist=40+Math.random()*70;
+    s.style.left=x+'px'; s.style.top=y+'px';
+    s.style.setProperty('--dx',(Math.cos(ang)*dist)+'px');
+    s.style.setProperty('--dy',(Math.sin(ang)*dist)+'px');
+    fxLayer.appendChild(s);
+    setTimeout(()=>s.remove(),750);
+  }
+}
+function glitchFx(){ labEl.classList.add('glitch'); setTimeout(()=>labEl.classList.remove('glitch'),420); }
+function shakeFx(){ labEl.classList.add('shake'); setTimeout(()=>labEl.classList.remove('shake'),380); }
+function alarmFx(){ alarmVignette.classList.add('active'); setTimeout(()=>alarmVignette.classList.remove('active'),1100); }
+function weldFlash(partEl){
+  if(!partEl) return;
+  partEl.classList.add('weld-flash');
+  setTimeout(()=>partEl.classList.remove('weld-flash'),600);
+}
+
+let tickerTimeout=null;
+const idleAlerts=["النظام مستقر… جاري مراقبة المكونات.","إشارة طاقة طبيعية في المخبر.","بانتظار إدخال المهندس المسؤول.","تحليل بيانات التجميع جارٍ…"];
+let idleIdx=0;
+function rotateIdleAlert(){
+  const el=document.getElementById('alertTicker');
+  el.classList.remove('danger');
+  el.textContent=idleAlerts[idleIdx%idleAlerts.length]; idleIdx++;
+  clearTimeout(tickerTimeout);
+  tickerTimeout=setTimeout(rotateIdleAlert,5200);
+}
+function flashAlert(text,danger){
+  const el=document.getElementById('alertTicker');
+  clearTimeout(tickerTimeout);
+  el.textContent=text;
+  el.classList.toggle('danger',!!danger);
+  tickerTimeout=setTimeout(rotateIdleAlert,2200);
+}
+
+/* ============ ROBOT DANCE ============ */
+const robotSvg=document.getElementById('robotSvg');
+const scanLine=document.getElementById('scanLine');
+const celebrateBanner=document.getElementById('celebrateBanner');
+const danceParticlesEl=document.getElementById('danceParticles');
+let danceInterval=null;
+let danceBeats=0;
+
+function spawnDanceParticle(){
+  const colors=['#3fe8ff','#37f7b2','#ffb23d','#9ff5ff','#2f8dff'];
+  const svgRect=robotSvg.getBoundingClientRect();
+  const frameRect=document.getElementById('platformFrame').getBoundingClientRect();
+
+  const p=document.createElement('div');
+  p.className='dance-particle';
+  const cx=svgRect.left - frameRect.left + svgRect.width*0.5;
+  const cy=svgRect.top - frameRect.top + svgRect.height*0.4;
+  const spread=svgRect.width*0.5;
+
+  const startX=cx + (Math.random()-0.5)*spread;
+  const startY=cy + (Math.random()-0.5)*svgRect.height*0.3;
+
+  p.style.left=startX+'px';
+  p.style.top=startY+'px';
+  p.style.background=colors[Math.floor(Math.random()*colors.length)];
+  p.style.boxShadow='0 0 6px '+colors[Math.floor(Math.random()*colors.length)];
+
+  const dx1=(Math.random()-0.5)*60+'px';
+  const dy1=-(20+Math.random()*40)+'px';
+  const dx2=(Math.random()-0.5)*100+'px';
+  const dy2=-(40+Math.random()*80)+'px';
+  const dx3=(Math.random()-0.5)*140+'px';
+  const dy3=-(60+Math.random()*120)+'px';
+
+  p.style.setProperty('--dx1',dx1);
+  p.style.setProperty('--dy1',dy1);
+  p.style.setProperty('--dx2',dx2);
+  p.style.setProperty('--dy2',dy2);
+  p.style.setProperty('--dx3',dx3);
+  p.style.setProperty('--dy3',dy3);
+  p.style.animationDuration=(1.2+Math.random()*0.8)+'s';
+  p.style.animationDelay=(Math.random()*0.4)+'s';
+
+  document.getElementById('platformFrame').appendChild(p);
+  p.classList.add('active');
+  setTimeout(()=>p.remove(), 2200);
+}
+
+function startRobotDance(){
+  // Stop scan line
+  scanLine.style.animationPlayState='paused';
+  scanLine.style.opacity='0';
+
+  // Add dancing class to robot
+  robotSvg.classList.add('dancing');
+
+  // Show celebration banner
+  celebrateBanner.classList.add('show');
+
+  // Spawn particles rhythmically
+  let beat=0;
+  danceInterval=setInterval(()=>{
+    for(let i=0;i<3;i++) spawnDanceParticle();
+    sndDancebeat(beat);
+    beat++;
+
+    // Spark burst every 4 beats
+    if(beat%4===0) sparkBurst(0.5, 0.4, 10);
+  }, 320);
+
+  // Change alert ticker
+  flashAlert('🤖 الروبوت يرقص! تم تفعيله بنجاح 🎉', false);
+}
+
+function stopRobotDance(){
+  if(danceInterval){ clearInterval(danceInterval); danceInterval=null; }
+  robotSvg.classList.remove('dancing');
+  celebrateBanner.classList.remove('show');
+  scanLine.style.animationPlayState='running';
+  scanLine.style.opacity='0.55';
+}
+
+/* ============ ASSISTANT ============ */
+const botEl=document.getElementById('assistantBot');
+const assistantText=document.getElementById('assistantText');
+function assistantSay(text,state,duration){
+  assistantText.textContent=text;
+  botEl.setAttribute('data-state',state||'talking');
+  clearTimeout(botEl._t);
+  botEl._t=setTimeout(()=>{ botEl.setAttribute('data-state','idle'); },duration||2600);
+}
+
+/* ============ FIREWORKS ============ */
+const fwCanvas=document.getElementById('fireworksCanvas');
+const fwCtx=fwCanvas.getContext('2d');
+let fwParticles=[]; let fwRunning=false;
+function resizeFw(){ fwCanvas.width=window.innerWidth; fwCanvas.height=window.innerHeight; }
+window.addEventListener('resize',resizeFw); resizeFw();
+function spawnFirework(){
+  const x=Math.random()*fwCanvas.width; const y=Math.random()*fwCanvas.height*0.5+40;
+  const hueSet=['#3fe8ff','#37f7b2','#ffb23d','#9ff5ff'];
+  const color=hueSet[Math.floor(Math.random()*hueSet.length)];
+  for(let i=0;i<40;i++){
+    const ang=(Math.PI*2*i)/40; const speed=1.5+Math.random()*2.6;
+    fwParticles.push({x,y,vx:Math.cos(ang)*speed,vy:Math.sin(ang)*speed,life:1,color});
+  }
+}
+function fwLoop(){
+  if(!fwRunning) return;
+  fwCtx.clearRect(0,0,fwCanvas.width,fwCanvas.height);
+  fwParticles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.025; p.life-=0.014;
+    fwCtx.globalAlpha=Math.max(p.life,0);
+    fwCtx.fillStyle=p.color;
+    fwCtx.beginPath(); fwCtx.arc(p.x,p.y,2.4,0,Math.PI*2); fwCtx.fill();
+  });
+  fwParticles=fwParticles.filter(p=>p.life>0);
+  fwCtx.globalAlpha=1;
+  requestAnimationFrame(fwLoop);
+}
+function startFireworks(){
+  fwRunning=true; fwLoop();
+  let bursts=0; const iv=setInterval(()=>{ spawnFirework(); bursts++; if(bursts>=9){clearInterval(iv);} },420);
+  setTimeout(()=>{ fwRunning=false; fwCtx.clearRect(0,0,fwCanvas.width,fwCanvas.height); },4600);
+}
+
+/* ============ PARTICLES BG ============ */
+(function initParticles(){
+  const bg=document.getElementById('bg-fx');
+  for(let i=0;i<26;i++){
+    const p=document.createElement('div'); p.className='particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.bottom='-10px';
+    p.style.animationDuration=(10+Math.random()*16)+'s';
+    p.style.animationDelay=(Math.random()*16)+'s';
+    bg.appendChild(p);
+  }
+})();
+
+/* ============ CURRICULUM DATA ============ */
+const STAGES=[
+  {
+    key:'head', part:'head', icon:'🧠',
+    title:'المرحلة 1 — بناء رأس الروبوت',
+    mission:'إعادة تركيب رأس الروبوت عبر حل تحديات الأعداد والكسور.',
+    intro:'النظام المنطقي للروبوت معطّل بالكامل. لإعادة تشغيل رأسه، يجب حل تحديات هذه المرحلة بدقة تامة.',
+    questions:[
+      {type:'mcq', prompt:'عند حساب العبارة <span dir="ltr">A=25+5×2-7</span> بدون أقواس، ما هي العملية التي يجب إجراؤها أولاً؟', options:['الضرب','الجمع','الطرح','لا يهم'], correct:0},
+      {type:'tf', prompt:'العدد 0.5 يساوي الكسر \\(\\frac{1}{2}\\)', answer:true},
+      {type:'fill', prompt:'في القسمة الإقليدية لِـ 47 على 6، الباقي يساوي:', answer:5},
+      {type:'mcq', prompt:'أيّ الكسور التالية أكبر؟', options:['\\(\\frac{3}{4}\\)','\\(\\frac{5}{8}\\)','\\(\\frac{1}{4}\\)','\\(\\frac{1}{2}\\)'], correct:0},
+      {type:'tf', prompt:'لجمع كسرين لهما نفس المقام، نجمع البسطين ونحتفظ بنفس المقام.', answer:true},
+      {type:'fill', prompt:'ما هي الخاصية التي تسمح لنا بكتابة العبارة k(a+b) على الشكل ka+kb:', answer:'التوزيع'},
+      {type:'mcq', prompt:'  احسب بسرعة:<span dir="ltr"> A=45-5×2-7</span>', options:['28','54','48','64'], correct:0, timed:20},
+      {type:'seq', prompt:'رتّب الكسور التالية ترتيبًا تصاعديًا (من الأصغر إلى الأكبر):', items:['\\(\\frac{1}{2}\\)','\\(\\frac{1}{4}\\)','\\(\\frac{3}{4}\\)','\\(\\frac{1}{8}\\)'], correctOrder:['\\(\\frac{1}{8}\\)','\\(\\frac{1}{4}\\)','\\(\\frac{1}{2}\\)','\\(\\frac{3}{4}\\)']},
+      {type:'match', prompt:'صل كل كسر بكتابته العشرية المكافئة:', pairs:[['\\(\\frac{1}{2}\\)','0.5'],['\\(\\frac{1}{4}\\)','0.25'],['\\(\\frac{3}{4}\\)','0.75'],['\\(\\frac{1}{5}\\)','0.2']]}
+    ]
+  },
+  {
+    key:'arms', part:'arms', icon:'🦾',
+    title:'المرحلة 2 — تركيب الذراعين',
+    mission:'تثبيت الذراعين باستعمال مبادئ الهندسة: الزوايا والمستقيمات والمثلثات والدائرة.',
+    intro:'الذراعين بحاجة ألى حل تحديات الزوايا والمستقيمات والمثلثات لإعادة توصيلها.',
+    questions:[
+      {type:'tf', prompt:'المستقيمان المتعامدان يشكّلان عند تقاطعهما زاوية قياسها 80°.', answer:false},
+      {type:'mcq', prompt:'مجموع زوايا المثلث يساوي:', options:['90°','180°','270°','360°'], correct:1},
+      {type:'fill', prompt:'زاويتان متتامتان، قياس الأولى 35°. فإن قياس الثانية = ؟ (بالدرجة)', answer:55},
+      {type:'mcq', prompt:'في التناظر المركزي بالنسبة لنقطة O، نظير النقطة A هو A′ بحيث:', options:['O منتصف القطعة [AA′]','A = A′','OA ⟂ OA′','لا توجد علاقة بينهما'], correct:0},
+      {type:'tf', prompt:'التناظر المركزي يحافظ على قياسات الأطوال والزوايا.', answer:true},
+      {type:'seq', prompt:'رتّب خطوات إنشاء محور قطعة مستقيمة بالمدور والمسطرة:', items:['نحدد نقطتي تقاطع الأقواس ','ضع رأس المدور في أحد طرفي القطعة وارسم قوسين أحدهما فوق القطعة و الآخر تحتها','بنفس فتحة المدورعلى الطرف الثاني من القطعة المستقيمة نرسم قوسين احدهما فوق القطعة و الآخر تحتها ','نربط بين النقطتين لتحديد محور القطعة المستقيمة'], correctOrder:['ضع رأس المدور في أحد طرفي القطعة وارسم قوسين أحدهما فوق القطعة و الآخر تحتها','بنفس فتحة المدورعلى الطرف الثاني من القطعة المستقيمة نرسم قوسين احدهما فوق القطعة و الآخر تحتها ','نحدد نقطتي تقاطع الأقواس ','نربط بين النقطتين لتحديد محور القطعة المستقيمة'],},
+      {type:'fill', prompt:'زاويتان متجاورتان مجموعهما 190°. إذا كانت الأولى 110°، فإن الثانية = ؟ (بالدرجة)', answer:80, timed:15},
+      {type:'mcq', prompt:'إذا كان المستقيمان (d1) و(d2) متوازيين، فإن الزاويتين المتبادلتين داخليًا:', options:['متساويتان','متكاملتان','متتامتان','لا يمكن تحديد ذلك'], correct:0},
+      {type:'fill', prompt:'نصف قطر دائرة طوله4cm. فإن محيطها = ؟ ', answer:25.12}
+    ]
+  },
+  {
+    key:'sensors', part:'sensors', icon:'📡',
+    title:'المرحلة 3 — تركيب نظام الاستشعار',
+    mission:'معايرة نظام الاستشعار باستعمال الأعداد النسبية، المعلم، والعبارات الحرفية.',
+    intro:'يحتاج الاستشعار إلى حل تحديات الأعداد النسبية والمعادلات لتفعيله.',
+    questions:[
+      {type:'mcq', prompt:'احسب: <span dir="ltr">(−5) + 3 = ?</span>', options:['−2','2','−8','8'], correct:0},
+      {type:'tf', prompt:'العدد (−7) أصغر من العدد (−3).', answer:true},
+      {type:'fill', prompt:'احسب: <span dir="ltr">(−8) − (−2) =?', answer:-6},
+      {type:'mcq', prompt:'في معلم متعامد متجانس لدينا A(2,3) و B(2,7). فإن المسافة AB = ؟', options:['5','4','7','9'], correct:1},
+      {type:'match', prompt:'صل كل عبارة حرفية بصيغتها المبسّطة:', pairs:[['2x + 3x','5x'],['10x − 4x','6x'],['2x + x -3x','0'],['8x − 5x','3x']]},
+      {type:'fill', prompt:'حلّ المعادلة:<span dir="ltr"> x + 7 = 12 ⇒ x = ?</span>', answer:5, timed:15},
+      {type:'mcq', prompt:'حلّ المعادلة: <span dir="ltr"> 3x = 21 ⇒ x = ?</span>', options:['7','6','8','9'], correct:0},
+      {type:'fill', prompt:'معادلة من الشكل <span dir="ltr">b = x ÷ a</span>: إذا كان  <span dir="ltr">20= x ÷ 4</span>، فإن <span dir="ltr">x = ?</span>', answer:80},
+      {type:'tf', prompt:'حاصل ضرب عددين نسبيين مختلفين في الإشارة يكون موجبا.', answer:false}
+    ]
+  },
+  {
+    key:'core', part:'core', icon:'⚡',
+    title:'المرحلة 4 — تثبيت معالج الذكاء الاصطناعي',
+    mission:'تثبيت النواة المركزية باستعمال خصائص متوازي الأضلاع والمستطيل والمربع والمعين، والتناسب والنسب المئوية.',
+    intro:'النواة المركزية تحتاج هيكلًا هندسيًا متوازنًا تمامًا. حل تحديات الأشكال الرباعية والنسب لإقفال النواة بأمان.',
+    questions:[
+      {type:'mcq', prompt:'الشكل الرباعي الذي أقطاره متساوية ومتعامدة ومنصِّفة معًا هو:', options:['المستطيل','المربع','المعين','متوازي الأضلاع'], correct:1},
+      {type:'tf', prompt:'في المستطيل، الأقطار متساوية الطول.', answer:true},
+      {type:'fill', prompt:'مساحة مستطيل طوله8cm وعرضه5cm هي:', answer:40},
+      {type:'mcq', prompt:'مساحة معيّن قطراه 6 cm و8 cm هي:', options:['24','48','14','28'], correct:0},
+      {type:'match', prompt:'صل كل شكل رباعي بخاصية أقطاره:', pairs:[['المربع','الأقطار متساوية ومتعامدة ومنصّفة'],['المستطيل','الأقطار متساوية ومنصّفة'],['المعين','الأقطار متعامدة ومنصّفة'],['متوازي الأضلاع','الأقطار تتناصف فقط']]},
+      {type:'fill', prompt:'احسب: 25% من 200 = ؟', answer:50, timed:15},
+      {type:'mcq', prompt:'أوجد x في التناسب: \\(\\frac{3}{4}\\) = \\(\\frac{x}{12}\\)', options:['16','6','8','9'], correct:3},
+      {type:'fill', prompt:'<span dir="ltr">2,5Km=m?</span>', answer:2500},
+      {type:'tf', prompt:'في جدول تناسبية، إذا كان سعر <span dir="ltr">2Kg</span> من التفاح هو <span dir="ltr">300DA </span> فسعر <span dir="ltr">5Kg</span> هو <span dir="ltr">750DA</span> ', answer:true}
+    ]
+  },
+  {
+    key:'legs', part:'legs', icon:'🚀',
+    title:'المرحلة 5 — البرمجة النهائية والتفعيل',
+    mission:'استكمال البرمجة النهائية باستعمال الإحصاء ومساحة الدائرة، ثم تفعيل الروبوت.',
+    intro:'هذه هي المرحلة الأخيرة! حل التحديات الإحصائية والهندسية لإكمال البرمجة وتفعيل الروبوت بالكامل.',
+    questions:[
+      {type:'mcq', prompt:'في مخطط دائري ، مجموع نسب جميع الفئات يساوي:', options:['100%','180%','360%','50%'], correct:0},
+      {type:'fill', prompt:'في السلسلة الإحصائية: 2, 3, 2, 4, 3, 2  فإن تكرار القيمة 2 يساوي:', answer:3},
+      {type:'tf', prompt:'في مخطط الأعمدة،طول كل عمود عند دراسة فئات إحصائية هو تكرارالفئة الموافقة', answer:true},
+      {type:'mcq', prompt:'يمثل مخطط دائري توزيع التلاميذ، إذا كان قياس زاوية قطاع تلاميذ الرياضة هو 90° ، فما هي نسبتهم المئوية؟', options:['10','90','25','50'], correct:2},
+      {type:'fill', prompt:'ما هو مجموع التكرارات النسبية لجميع فئات سلسلة إحصائية', answer:1},
+      {type:'mcq', prompt:'المساحة الجانبية لموشور قائم تساوي:', options:['محيط القاعدة × الارتفاع','مساحة القاعدة × الارتفاع','نصف محيط القاعدة × الارتفاع','مساحة القاعدة فقط'], correct:0},
+      {type:'fill', prompt:'مساحة دائرة نصف قطرها<span dir="ltr">2cm </span> (خذ π ≈ 3.14) = ؟<span dir="ltr">cm² </span>', answer:12.56, tol:0.1, timed:10},
+      {type:'seq', prompt:'رتّب خطوات حل مشكلة رياضية بطريقة منهجية:', items:['تحقق من النتيجة وتأكد من منطقيتها','اقرأ المشكلة بعناية وحدد المعطيات والمطلوب','نفّذ الحل بإجراء الحسابات اللازمة','ضع خطة للحل واختر القانون المناسب'], correctOrder:['اقرأ المشكلة بعناية وحدد المعطيات والمطلوب','ضع خطة للحل واختر القانون المناسب','نفّذ الحل بإجراء الحسابات اللازمة','تحقق من النتيجة وتأكد من منطقيتها']},
+      {type:'tf', prompt:'المساحة الجانبية لأسطوانة دوران تساوي محيط القاعدة × الارتفاع.', answer:true}
+    ]
+  }
+];
+
+/* ============ STATE ============ */
+let state={
+  stageIndex:0, qIndex:0, score:0, energy:50, streak:0,
+  mistakesTotal:0, correctTotal:0, startTime:null, timerInterval:null,
+  timerSeconds:0
+};
+const TYPE_POINTS={mcq:10, tf:8, fill:12, seq:20, match:22};
+
+/* ============ DOM REFS ============ */
+const deck=document.getElementById('questionDeck');
+const missionText=document.getElementById('missionText');
+const partsListEl=document.getElementById('partsList');
+const assemblyFill=document.getElementById('assemblyFill');
+const assemblyPct=document.getElementById('assemblyPct');
+const energyFill=document.getElementById('energyFill');
+const energyPct=document.getElementById('energyPct');
+const stageProgressFill=document.getElementById('stageProgressFill');
+const stageProgressLabel=document.getElementById('stageProgressLabel');
+const pointsDisplay=document.getElementById('pointsDisplay');
+const badgesRow=document.getElementById('badgesRow');
+const levelDisplay=document.getElementById('levelDisplay');
+const scoreDisplay=document.getElementById('scoreDisplay');
+
+STAGES.forEach((s,i)=>{
+  const li=document.createElement('li'); li.id='partitem-'+s.key;
+  li.innerHTML='<span class="dot"></span><span>'+s.icon+' '+partLabel(s.key)+'</span>';
+  partsListEl.appendChild(li);
+  const b=document.createElement('div'); b.className='badge'; b.id='badge-'+i; b.textContent=s.icon;
+  badgesRow.appendChild(b);
+});
+function partLabel(key){
+  return {head:'رأس الروبوت',arms:'الذراعين',sensors:'نظام الاستشعار',core:'معالج الذكاء الاصطناعي',legs:'النظام الحركي والتفعيل'}[key];
+}
+
+function startGlobalTimer(){
+  state.timerSeconds=0;
+  state.timerInterval=setInterval(()=>{
+    state.timerSeconds++;
+    const m=String(Math.floor(state.timerSeconds/60)).padStart(2,'0');
+    const s=String(state.timerSeconds%60).padStart(2,'0');
+    document.getElementById('timerDisplay').textContent=m+':'+s;
+  },1000);
+}
+
+function updateDashboard(){
+  const stage=STAGES[state.stageIndex];
+  const totalQ=stage?stage.questions.length:1;
+  const stagePct=Math.round((state.qIndex/totalQ)*100);
+  const overall=Math.round((state.stageIndex*100 + stagePct)/5);
+  assemblyFill.style.width=overall+'%'; assemblyPct.textContent=overall+'%';
+  energyFill.style.width=state.energy+'%'; energyPct.textContent=state.energy+'%';
+  stageProgressFill.style.width=stagePct+'%';
+  stageProgressLabel.textContent=state.qIndex+'/'+totalQ;
+  pointsDisplay.textContent=state.score;
+  scoreDisplay.textContent=state.score;
+  levelDisplay.textContent=Math.min(state.stageIndex+1,5);
+  if(stage) missionText.textContent=stage.mission;
+}
+
+function markPartDone(key){ const li=document.getElementById('partitem-'+key); if(li) li.classList.add('done'); }
+function unlockBadge(i){ const b=document.getElementById('badge-'+i); if(b) b.classList.add('unlocked'); }
+
+let countdownInterval=null;
+function clearCountdown(){ if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; } }
+
+function typeBadgeLabel(t){
+  return {mcq:'اختيار من متعدد', tf:'صحيح / خطأ', fill:'إكمال الإجابة', seq:'ترتيب تسلسلي', match:'لعبة التوصيل'}[t]||'';
+}
+
+function currentStage(){ return STAGES[state.stageIndex]; }
+function currentQuestion(){ return currentStage().questions[state.qIndex]; }
+
+async function renderQuestion(){
+  clearCountdown();
+  const q=currentQuestion();
+  const stage=currentStage();
+  deck.innerHTML='';
+
+  const topline=document.createElement('div'); topline.className='q-topline';
+  topline.innerHTML='<span class="q-badge">'+typeBadgeLabel(q.type)+' • سؤال '+(state.qIndex+1)+'/'+stage.questions.length+'</span>';
+  const timerWrap=document.createElement('span'); timerWrap.className='q-timer'+(q.timed?' show':'');
+  timerWrap.innerHTML='<span class="ring"></span><span id="qCountdown">'+(q.timed||0)+'s</span>';
+  topline.appendChild(timerWrap);
+  deck.appendChild(topline);
+
+  const prompt=document.createElement('div'); prompt.className='q-prompt'; prompt.innerHTML=q.prompt;
+  deck.appendChild(prompt);
+
+  const body=document.createElement('div'); body.className='q-body'; body.id='qBody';
+  deck.appendChild(body);
+
+
+  const feedback=document.createElement('div'); feedback.className='feedback-line'; feedback.id='feedbackLine';
+  deck.appendChild(feedback);
+
+  if(q.type==='mcq') renderMCQ(q,body);
+  else if(q.type==='tf') renderTF(q,body);
+  else if(q.type==='fill') renderFill(q,body);
+  else if(q.type==='seq') renderSeq(q,body);
+  else if(q.type==='match') renderMatch(q,body);
+
+  assistantSay(stageHintFor(q),'talking',2400);
+  await MathJax.typesetPromise([deck]);
+  if(q.timed){
+    let remaining=q.timed;
+    countdownInterval=setInterval(()=>{
+      remaining--;
+      const el=document.getElementById('qCountdown');
+      if(el) el.textContent=remaining+'s';
+      if(remaining<=0){ clearCountdown(); registerWrong(true); }
+    },1000);
+  }
+  updateDashboard();
+}
+
+function stageHintFor(q){
+  const hints=[
+    'أتطلع لرؤية حل هذا التحدي يا مهندس!',
+    'ركّز جيدًا، النتيجة الصحيحة تعيد تشغيل مكوّن جديد.',
+    'خذ وقتك في التفكير، لكن لا تتأخر إن كان التحدي محدودًا بالوقت!',
+    'دقّتك في الحساب تحمي استقرار المخبر.'
+  ];
+  return hints[Math.floor(Math.random()*hints.length)];
+}
+
+function renderMCQ(q,body){
+  const grid=document.createElement('div'); grid.className='opt-grid';
+  q.options.forEach((opt,i)=>{
+    const btn=document.createElement('button'); btn.className='opt-btn'; btn.innerHTML=opt;
+    btn.addEventListener('click',()=>{
+      sndClick();
+      if(i===q.correct){ btn.classList.add('correct'); registerCorrect(); }
+      else { btn.classList.add('wrong'); btn.disabled=true; registerWrong(false); }
+    });
+    grid.appendChild(btn);
+  });
+  body.appendChild(grid);
+  MathJax.typesetPromise();
+}
+
+function renderTF(q,body){
+  const row=document.createElement('div'); row.className='tf-row';
+  const tBtn=document.createElement('button'); tBtn.className='tf-btn t'; tBtn.textContent='✓ صحيح';
+  const fBtn=document.createElement('button'); fBtn.className='tf-btn f'; fBtn.textContent='✕ خطأ';
+  function attempt(val,btn,otherBtn){
+    sndClick();
+    if(val===q.answer){ btn.classList.add('correct'); registerCorrect(); }
+    else { btn.classList.add('wrong'); btn.disabled=true; otherBtn.disabled=false; registerWrong(false); }
+  }
+  tBtn.addEventListener('click',()=>attempt(true,tBtn,fBtn));
+  fBtn.addEventListener('click',()=>attempt(false,fBtn,tBtn));
+  row.appendChild(tBtn); row.appendChild(fBtn);
+  body.appendChild(row);
+}
+
+function renderFill(q,body){
+  const row=document.createElement('div'); row.className='fill-row';
+  const input=document.createElement('input'); input.className='fill-input'; input.type='text';
+  input.placeholder='أدخل الناتج هنا'; input.inputMode='decimal';
+  const btn=document.createElement('button'); btn.className='primary-btn'; btn.textContent='تأكيد الإجابة';
+  function submit(){
+    sndClick();
+    const raw = input.value.trim();
+
+if (typeof q.answer === "number") {
+    
+    const val = parseFloat(raw.replace(',', '.'));
+    const tol = q.tol != null ? q.tol : 0.01;
+
+    if (!isNaN(val) && Math.abs(val - q.answer) <= tol) {
+        input.style.borderColor = 'var(--green)';
+        registerCorrect();
+    } else {
+        input.classList.add('wrong');
+        setTimeout(() => input.classList.remove('wrong'), 350);
+        registerWrong(false);
+    }
+
+} else {
+
+    if (raw === q.answer) {
+        input.style.borderColor = 'var(--green)';
+        registerCorrect();
+    } else {
+        input.classList.add('wrong');
+        setTimeout(() => input.classList.remove('wrong'), 350);
+        registerWrong(false);
+    }
+
+}
+  }
+  btn.addEventListener('click',submit);
+  input.addEventListener('keydown',(e)=>{ if(e.key==='Enter') submit(); });
+  row.appendChild(input); row.appendChild(btn);
+  body.appendChild(row);
+}
+
+function renderSeq(q,body){
+  const pool=document.createElement('div'); pool.className='seq-pool';
+  const tray=document.createElement('div'); tray.className='seq-tray';
+  const submitBtn=document.createElement('button'); submitBtn.className='primary-btn'; submitBtn.textContent='تأكيد الترتيب'; submitBtn.disabled=true;
+  let chosen=[];
+  const shuffled=q.items.slice().sort(()=>Math.random()-0.5);
+  function renderPool(){
+    pool.innerHTML='';
+    shuffled.forEach((item)=>{
+      if(chosen.includes(item)) return;
+      const chip=document.createElement('button'); chip.className='seq-chip'; chip.innerHTML=item;
+      chip.addEventListener('click',()=>{ sndClick(); chosen.push(item); renderAll(); });
+      pool.appendChild(chip);
+    });
+  }
+  function renderTray(){
+    tray.innerHTML='';
+    chosen.forEach((item,idx)=>{
+      const chip=document.createElement('button'); chip.className='seq-chip tray-chip';
+      chip.innerHTML='<span class="seq-num">'+(idx+1)+'</span><span>'+item+'</span>';
+      chip.addEventListener('click',()=>{ sndClick(); chosen.splice(idx,1); renderAll(); });
+      tray.appendChild(chip);
+    });
+    submitBtn.disabled=chosen.length!==q.items.length;
+  }
+  function renderAll(){
+     renderPool(); 
+     renderTray();
+      
+
+  }
+  renderAll();
+  submitBtn.addEventListener('click',()=>{
+    sndClick();
+    const ok=chosen.every((v,i)=>v===q.correctOrder[i]);
+    if(ok) registerCorrect();
+    else { registerWrong(false); chosen=[]; renderAll(); }
+  });
+  const label1=document.createElement('div'); label1.style.fontSize='12px'; label1.style.color='var(--ink-dim)'; label1.textContent='العناصر المتاحة:';
+  const label2=document.createElement('div'); label2.style.fontSize='12px'; label2.style.color='var(--ink-dim)'; label2.textContent='ترتيبك الحالي:';
+  body.appendChild(label1); body.appendChild(pool); body.appendChild(label2); body.appendChild(tray); body.appendChild(submitBtn);
+}
+
+function renderMatch(q,body){
+  const cols=document.createElement('div'); cols.className='match-cols';
+  const leftCol=document.createElement('div'); leftCol.className='match-col';
+  const rightCol=document.createElement('div'); rightCol.className='match-col';
+  const lefts=q.pairs.map(p=>p[0]).sort(()=>Math.random()-0.5);
+  const rights=q.pairs.map(p=>p[1]).sort(()=>Math.random()-0.5);
+  let matchedCount=0; let selL=null, selR=null;
+  function makeItem(text,col,side){
+    const el=document.createElement('button'); el.className='match-item'; el.textContent=text;
+    el.dataset.text=text;
+    el.addEventListener('click',()=>{
+      if(el.classList.contains('matched')) return;
+      sndClick();
+      if(side==='l'){ if(selL) selL.classList.remove('selected'); selL=el; el.classList.add('selected'); }
+      else { if(selR) selR.classList.remove('selected'); selR=el; el.classList.add('selected'); }
+      if(selL && selR) tryMatch();
+    });
+    col.appendChild(el);
+  }
+  lefts.forEach(t=>makeItem(t,leftCol,'l'));
+  rights.forEach(t=>makeItem(t,rightCol,'r'));
+  function tryMatch(){
+    const pairOk=q.pairs.some(p=>p[0]===selL.dataset.text && p[1]===selR.dataset.text);
+    if(pairOk){
+      selL.classList.add('matched'); selR.classList.add('matched');
+      selL.classList.remove('selected'); selR.classList.remove('selected');
+      selL=null; selR=null; matchedCount++;
+      sndCorrect(); sparkBurst(0.5,0.5,8);
+      if(matchedCount===q.pairs.length) registerCorrect(true);
+    } else {
+      selL.classList.add('shake-wrong'); selR.classList.add('shake-wrong');
+      setTimeout(()=>{ if(selL)selL.classList.remove('shake-wrong'); if(selR)selR.classList.remove('shake-wrong'); },320);
+      registerWrong(false,true);
+      const l=selL, r=selR; selL=null; selR=null;
+      setTimeout(()=>{ if(l)l.classList.remove('selected'); if(r)r.classList.remove('selected'); },320);
+    }
+  }
+  cols.appendChild(rightCol); cols.appendChild(leftCol);
+  body.appendChild(cols);
+}
+
+/* ============ ANSWER HANDLING ============ */
+function registerCorrect(skipSound){
+  clearCountdown();
+  state.streak++; state.correctTotal++;
+  const q=currentQuestion();
+  let pts=TYPE_POINTS[q.type]||10;
+  if(q.timed) pts+=5;
+  if(state.streak>=3) pts+=Math.min(state.streak,8);
+  state.score+=pts;
+  state.energy=Math.min(100,state.energy+6);
+  if(!skipSound) sndCorrect();
+  sparkBurst(0.5,0.55,16);
+  flashAlert('✓ تم حل التحدي بنجاح — جاري تثبيت المكوّن…',false);
+  assistantSay('إجابة صحيحة! المكوّن يستقر الآن في موضعه.','happy',2200);
+  document.getElementById('feedbackLine').textContent='✓ ممتاز! إجابة صحيحة.';
+  document.getElementById('feedbackLine').className='feedback-line ok';
+  updateDashboard();
+  setTimeout(advance,900);
+}
+
+function registerWrong(timeout,skipSound){
+  state.streak=0; state.mistakesTotal++;
+  state.energy=Math.max(5,state.energy-8);
+  if(!skipSound) sndWrong();
+  glitchFx(); shakeFx(); alarmFx();
+  flashAlert(timeout?'⚠ انتهى الوقت! فشل تثبيت المكوّن، أعد المحاولة.':'⚠ خطأ في التركيب! أعد المحاولة.',true);
+  assistantSay(timeout?'انتهى الوقت! حاول مجددًا بسرعة أكبر.':'حدث خلل في التثبيت، تحقق من حسابك وحاول مرة أخرى.','error',2200);
+  const fb=document.getElementById('feedbackLine');
+  if(fb){ fb.textContent='✕ إجابة غير صحيحة، حاول مجددًا.'; fb.className='feedback-line bad'; }
+  updateDashboard();
+  if(timeout){ const q=currentQuestion(); if(q.timed){ setTimeout(renderQuestion,1200); } }
+}
+
+function advance(){
+  const stage=currentStage();
+  state.qIndex++;
+  if(state.qIndex>=stage.questions.length) completeStage();
+  else renderQuestion();
+}
+
+function completeStage(){
+  const stage=currentStage();
+  const partEl=document.getElementById('part-'+stage.part);
+  partEl.classList.add('unlocked');
+  weldFlash(partEl);
+  sparkBurst(0.5,0.45,26);
+  sndStageComplete();
+  markPartDone(stage.key);
+  unlockBadge(state.stageIndex);
+  assistantSay('تم تثبيت '+partLabel(stage.key)+' بنجاح! المرحلة التالية في الانتظار.','celebration',2600);
+  flashAlert('🎉 اكتملت المرحلة! تم تثبيت مكوّن جديد بنجاح.',false);
+  updateDashboard();
+
+  if(state.stageIndex>=STAGES.length-1){
+    setTimeout(finale,1400);
+  } else {
+    setTimeout(()=>{ state.stageIndex++; state.qIndex=0; showStageIntro(); },1500);
+  }
+}
+
+function showStageIntro(){
+  const stage=currentStage();
+  document.getElementById('stageIntroIcon').textContent=stage.icon;
+  document.getElementById('stageIntroTitle').textContent=stage.title;
+  document.getElementById('stageIntroText').textContent=stage.intro;
+  document.getElementById('stageIntroOverlay').classList.remove('hidden');
+  updateDashboard();
+}
+
+document.getElementById('stageIntroBtn').addEventListener('click',()=>{
+  document.getElementById('stageIntroOverlay').classList.add('hidden');
+  renderQuestion();
+});
+
+function finale(){
+  // Activate robot SVG glow
+  document.querySelector('.lab').classList.add('activated');
+  robotSvg.parentElement.classList.add('activated');
+
+  // Play activation sound
+  sndActivation();
+
+  // Start fireworks
+  startFireworks();
+
+  // Stop global timer
+  clearInterval(state.timerInterval);
+
+  // START ROBOT DANCE! 🎉
+  setTimeout(()=>{
+    startRobotDance();
+    assistantSay('🎉 تم التفعيل الكامل! أنا جاهز للعمل يا مهندس العظيم!','celebration',99999);
+  }, 800);
+
+  const accuracy = state.correctTotal/(state.correctTotal+state.mistakesTotal||1);
+  let stars=1;
+  if(accuracy>=0.9) stars=3; else if(accuracy>=0.7) stars=2;
+  const starEls=document.querySelectorAll('#finaleStars span');
+  starEls.forEach((s,i)=>s.classList.toggle('lit',i<stars));
+  document.getElementById('finalScore').textContent=state.score;
+
+  deck.innerHTML='<div style="text-align:center;padding:30px;color:var(--cyan-soft);font-weight:700;">⚡ تم تفعيل الروبوت بالكامل! ⚡</div>';
+
+  // Show finale overlay after dance has been going for a bit
+  setTimeout(()=>{ document.getElementById('finaleOverlay').classList.remove('hidden'); },3200);
+}
+
+/* ============ INIT / EVENTS ============ */
+document.getElementById('startBtn').addEventListener('click',()=>{
+  ensureAudio();
+  document.getElementById('introOverlay').classList.add('hidden');
+  startGlobalTimer();
+  rotateIdleAlert();
+  showStageIntro();
+});
+
+document.getElementById('restartBtn').addEventListener('click',()=>{
+  stopRobotDance();
+  window.location.reload();
+});
+
+document.getElementById('muteBtn').addEventListener('click',(e)=>{
+  muted=!muted;
+  e.target.textContent=muted?'🔇':'🔊';
+});
+
+updateDashboard();
+})();
+</script>
+</body>
+</html>
